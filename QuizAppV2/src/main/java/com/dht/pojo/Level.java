@@ -8,20 +8,28 @@ package com.dht.pojo;
  *
  * @author admin
  */
-//@AllArgsConstructor
-public class Category {
+public class Level {
     private int id;
     private String name;
+    private String note;
 
-    public Category(int id, String name) {
+    public Level(int id, String name, String note) {
         this.id = id;
         this.name = name;
+        this.note = note;
+    }
+    
+    public Level(String name, String note) {
+        this.name = name;
+        this.note = note;
     }
 
     @Override
     public String toString() {
-        return this.getName(); // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+        return this.name; // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
     }
+    
+    
 
     /**
      * @return the id
@@ -50,6 +58,18 @@ public class Category {
     public void setName(String name) {
         this.name = name;
     }
-    
-    
+
+    /**
+     * @return the note
+     */
+    public String getNote() {
+        return note;
+    }
+
+    /**
+     * @param note the note to set
+     */
+    public void setNote(String note) {
+        this.note = note;
+    }
 }
