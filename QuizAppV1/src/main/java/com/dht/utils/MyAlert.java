@@ -32,4 +32,10 @@ public class MyAlert {
         alert.setContentText(content);
         alert.showAndWait();
     }
+    
+    public void showMsg(String content, Alert.AlertType type) {
+        alert.setContentText(content);
+        alert.setAlertType(type);
+        alert.showAndWait();
+    }
 }
