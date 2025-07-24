@@ -6,4 +6,5 @@ module com.dht.quizappv1 {
 
     opens com.dht.quizappv1 to javafx.fxml;
     exports com.dht.quizappv1;
+    exports com.dht.pojo;
 }

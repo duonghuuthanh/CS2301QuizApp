@@ -2,7 +2,7 @@
  * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
  * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
  */
-package com.dht.services;
+package com.dht.services.questions;
 
 import com.dht.pojo.Question;
 import com.dht.utils.MyConnector;
@@ -48,5 +48,14 @@ public class UpdateQuestionServices {
             conn.commit();
         } else
             conn.rollback();
+    }
+    
+    public boolean deleteQuestion(int questionId) throws SQLException {
+        Connection conn = MyConnector.getInstance().connect();
+        
+        PreparedStatement stm = conn.prepareCall("DELETE FROM question WHERE id=?");
+        stm.setInt(1, questionId);
+        
+        return stm.executeUpdate() > 0;
     }
 }
