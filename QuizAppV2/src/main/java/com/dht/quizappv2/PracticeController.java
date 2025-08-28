@@ -4,16 +4,25 @@
  */
 package com.dht.quizappv2;
 
+import com.dht.pojo.Category;
+import com.dht.pojo.Level;
 import com.dht.pojo.Question;
+import com.dht.services.questions.BaseQuestionServices;
+import com.dht.services.questions.CategoryQuestionServicesDecorator;
+import com.dht.services.questions.LevelQuestionServicesDecorator;
+import com.dht.services.questions.LimitedQuestionServicesDecorator;
 import com.dht.utils.Configs;
+import com.dht.utils.FlyweightFactory;
 import com.dht.utils.MyAlert;
 import java.net.URL;
 import java.sql.SQLException;
 import java.util.List;
 import java.util.ResourceBundle;
+import javafx.collections.FXCollections;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleGroup;
@@ -30,6 +39,8 @@ public class PracticeController implements Initializable {
     @FXML Text txtContent;
     @FXML Text txtResult;
     @FXML VBox vboxChoices;
+    @FXML private ComboBox<Category> cbSearchCates;
+    @FXML private ComboBox<Level> cbSearchLevels;
     
     private List<Question> questions;
     private int currentQuestion;
@@ -41,14 +52,31 @@ public class PracticeController implements Initializable {
      */
     @Override
     public void initialize(URL url, ResourceBundle rb) {
-        // TODO
+        try {
+            this.cbSearchCates.setItems(FXCollections.observableList(FlyweightFactory.getData(Configs.cateServices, "categories")));
+            this.cbSearchLevels.setItems(FXCollections.observableList(FlyweightFactory.getData(Configs.levelServices, "levels")));
+            
+        } catch (SQLException ex) {
+            System.err.println(ex.getMessage());
+        }
     }    
     
     public void handleStart(ActionEvent event) throws SQLException {
         try {
             int num = Integer.parseInt(this.txtNum.getText());
             
-            questions = Configs.questionServices.getQuestions(num);
+            BaseQuestionServices s = Configs.questionServices;
+            
+            Category c = this.cbSearchCates.getSelectionModel().getSelectedItem();
+            if (c != null)
+                s = new CategoryQuestionServicesDecorator(s, c.getId());
+            
+            Level l = this.cbSearchLevels.getSelectionModel().getSelectedItem();
+            if (l != null)
+                s = new LevelQuestionServicesDecorator(s, l.getId());
+            
+            s = new LimitedQuestionServicesDecorator(s, num);
+            questions = s.list();
             
             this.currentQuestion = 0;
             this.loadQuestion();

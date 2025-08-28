@@ -8,10 +8,12 @@ import com.dht.pojo.Category;
 import com.dht.pojo.Choice;
 import com.dht.pojo.Level;
 import com.dht.pojo.Question;
-import com.dht.services.CategoryServices;
-import com.dht.services.LevelServices;
-import com.dht.services.QuestionServices;
+import com.dht.services.questions.BaseQuestionServices;
+import com.dht.services.questions.CategoryQuestionServicesDecorator;
+import com.dht.services.questions.KeywordQuestionServicesDecorator;
+import com.dht.services.questions.LevelQuestionServicesDecorator;
 import com.dht.utils.Configs;
+import com.dht.utils.FlyweightFactory;
 import com.dht.utils.MyAlert;
 import java.net.URL;
 import java.sql.SQLException;
@@ -45,7 +47,9 @@ import javafx.scene.layout.VBox;
 public class QuestionsController implements Initializable {
     @FXML private TextArea txtContent;
     @FXML private ComboBox<Category> cbCates;
+    @FXML private ComboBox<Category> cbSearchCates;
     @FXML private ComboBox<Level> cbLevels;
+    @FXML private ComboBox<Level> cbSearchLevels;
     @FXML private VBox vboxChoices;
     @FXML private ToggleGroup toggleChoice;
     @FXML private TableView<Question> tbQuestions;
@@ -60,19 +64,42 @@ public class QuestionsController implements Initializable {
     @Override
     public void initialize(URL url, ResourceBundle rb) {
         try {
-            this.cbCates.setItems(FXCollections.observableList(Configs.cateServices.getCates()));
-            this.cbLevels.setItems(FXCollections.observableList(Configs.levelServices.getLevels()));
+            this.cbCates.setItems(FXCollections.observableList(FlyweightFactory.getData(Configs.questionServices, "categories")));
+            this.cbSearchCates.setItems(FXCollections.observableList(FlyweightFactory.getData(Configs.questionServices, "categories")));
+            this.cbLevels.setItems(FXCollections.observableList(FlyweightFactory.getData(Configs.levelServices, "levels")));
+            this.cbSearchLevels.setItems(FXCollections.observableList(FlyweightFactory.getData(Configs.levelServices, "levels")));
             
             this.loadColumns();
-            this.tbQuestions.setItems(FXCollections.observableList(Configs.questionServices.getQuestions()));
+            this.tbQuestions.setItems(FXCollections.observableList(Configs.questionServices.list()));
         } catch (SQLException ex) {
             System.err.println(ex.getMessage());
         }
         
         this.txtSearch.textProperty().addListener(e -> {
             try {
+                BaseQuestionServices s = new KeywordQuestionServicesDecorator(Configs.questionServices, this.txtSearch.getText());
                 this.tbQuestions.getItems().clear();
-                this.tbQuestions.setItems(FXCollections.observableList(Configs.questionServices.getQuestions(this.txtSearch.getText())));
+                this.tbQuestions.setItems(FXCollections.observableList(s.list()));
+            } catch (SQLException ex) {
+                Logger.getLogger(QuestionsController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            }
+        });
+        
+        this.cbSearchCates.getSelectionModel().selectedItemProperty().addListener(e -> {
+            try {
+                BaseQuestionServices s = new CategoryQuestionServicesDecorator(Configs.questionServices, this.cbSearchCates.getSelectionModel().getSelectedItem().getId());
+                this.tbQuestions.getItems().clear();
+                this.tbQuestions.setItems(FXCollections.observableList(s.list()));
+            } catch (SQLException ex) {
+                Logger.getLogger(QuestionsController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
+            }
+        });
+        
+        this.cbSearchLevels.getSelectionModel().selectedItemProperty().addListener(e -> {
+            try {
+                BaseQuestionServices s = new LevelQuestionServicesDecorator(Configs.questionServices, this.cbSearchLevels.getSelectionModel().getSelectedItem().getId());
+                this.tbQuestions.getItems().clear();
+                this.tbQuestions.setItems(FXCollections.observableList(s.list()));
             } catch (SQLException ex) {
                 Logger.getLogger(QuestionsController.class.getName()).log(java.util.logging.Level.SEVERE, null, ex);
             }
@@ -108,7 +135,7 @@ public class QuestionsController implements Initializable {
                 b.addChoice(choice);
             }
             
-            Configs.questionServices.addQuestion(b.build());
+            Configs.uQuestionServices.addQuestion(b.build());
             MyAlert.getInstance().showMsg("Thêm câu hỏi thành công!");
         } catch(SQLException ex) {
             MyAlert.getInstance().showMsg("Thêm không thành công, lý do: " + ex.getMessage());
@@ -137,7 +164,7 @@ public class QuestionsController implements Initializable {
                 if (t.isPresent() && t.get().equals(ButtonType.OK)) {
                     Question q = (Question) cell.getTableRow().getItem();
                     try {
-                        if (Configs.questionServices.deleteQuestioin(q.getId()) == true) {
+                        if (Configs.uQuestionServices.deleteQuestioin(q.getId()) == true) {
                             this.tbQuestions.getItems().remove(q);
                             MyAlert.getInstance().showMsg("Xóa câu hỏi thành công!", Alert.AlertType.INFORMATION);
                         } else
