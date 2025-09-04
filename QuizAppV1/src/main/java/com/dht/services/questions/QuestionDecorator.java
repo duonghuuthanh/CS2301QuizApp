@@ -4,19 +4,16 @@
  */
 package com.dht.services.questions;
 
-import java.util.List;
-
 /**
  *
  * @author admin
  */
-public class QuestionServices extends BaseQuestionServices  {
+public abstract class QuestionDecorator extends BaseQuestionServices {
+    protected BaseQuestionServices decorator;
 
-    @Override
-    public String getSQL(List<Object> params) {
-        return "SELECT * FROM question WHERE 1=1";
+    public QuestionDecorator(BaseQuestionServices decorator) {
+        this.decorator = decorator;
     }
-
     
     
 }

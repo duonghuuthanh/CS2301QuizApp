@@ -17,34 +17,30 @@ import java.util.List;
  *
  * @author admin
  */
-public class LimitQuestionServicesDecorator extends QuestionServices {
+public class LimitQuestionServicesDecorator extends QuestionDecorator {
     private int num;
 
-    public LimitQuestionServicesDecorator(int num) {
+    public LimitQuestionServicesDecorator(BaseQuestionServices decorator, int num) {
+        super(decorator);
         this.num = num;
     }
 
     @Override
-    public PreparedStatement getStm(Connection conn) throws SQLException {
-        PreparedStatement stm = conn.prepareCall("SELECT * FROM question ORDER BY rand() LIMIT ?");
-        stm.setInt(1, num);
+    public List<Question> list() throws SQLException {
+        List<Question> questions = super.list();
         
-        return stm;
-    }
- 
-    @Override
-    public List<Question> getResults(ResultSet rs) throws SQLException {
-        List<Question> questions = new ArrayList<>();
-        while (rs.next()) {
-            int id = rs.getInt("id");
-            
-            BaseServices s = new ChoiceServices(id);
-             
-            Question q = new Question.Builder(id, rs.getString("content")).addAllChoices(s.list()).build();
-
-            questions.add(q);
+        for (var q: questions) {
+            BaseServices s = new ChoiceServices(q.getId());
+            q.setChoices(s.list());
         }
-
+        
         return questions;
+    }
+    
+    @Override
+    public String getSQL(List<Object> params) {
+        String sql = this.decorator.getSQL(params) + " ORDER BY rand() LIMIT ?";
+        params.add(this.num);
+        return sql;
     }
 }
