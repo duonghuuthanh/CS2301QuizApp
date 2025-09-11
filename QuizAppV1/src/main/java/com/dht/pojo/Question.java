@@ -31,6 +31,13 @@ public class Question {
         this.choices = b.choices;
     }
 
+    @Override
+    public String toString() {
+        return this.content; // Generated from nbfs://nbhost/SystemFileSystem/Templates/Classes/Code/OverriddenMethodBody
+    }
+    
+    
+
     public static class Builder {
 
         private int id;
